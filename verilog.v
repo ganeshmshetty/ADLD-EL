@@ -8,6 +8,7 @@ module secure_voting_machine (
     input result_mode,
 
     // Vote inputs
+    input [3:0] voter_id, // Unique ID for each voter (16 possible voters)
     input vote_a,
     input vote_b,
     input vote_c,
@@ -34,6 +35,7 @@ module secure_voting_machine (
 
     reg [2:0] state, next_state;
     reg auth_ok;
+    reg [15:0] voter_status; // Track who has voted (Bit 0 for ID 0, Bit 1 -> ID 1, etc.)
 
     // FSM state register
     always @(posedge clk or posedge reset) begin
@@ -58,7 +60,8 @@ module secure_voting_machine (
             IDLE:
                 if (result_mode)
                     next_state = RESULT;
-                else if (voting_enabled && (vote_a || vote_b || vote_c))
+                // Only allow vote if enabled AND user hasn't voted yet
+                else if (voting_enabled && (vote_a || vote_b || vote_c) && !voter_status[voter_id])
                     next_state = VOTE;
                 else
                     next_state = IDLE;
@@ -86,6 +89,7 @@ module secure_voting_machine (
             count_a <= 0;
             count_b <= 0;
             count_c <= 0;
+            voter_status <= 0; // Clear all voting records
             voting_enabled <= 0;
             busy <= 0;
         end else begin
@@ -101,6 +105,8 @@ module secure_voting_machine (
 
                 VOTE: begin
                     busy <= 1;
+                    voter_status[voter_id] <= 1; // Mark this ID as having voted
+                    
                     if (vote_a)
                         count_a <= count_a + 1;
                     else if (vote_b)

@@ -5,6 +5,7 @@ module tb_secure_voting_machine;
     reg clk;
     reg reset;
     reg [3:0] admin_password;
+    reg [3:0] voter_id;
     reg enable_admin;
     reg result_mode;
     reg vote_a, vote_b, vote_c;
@@ -20,6 +21,7 @@ module tb_secure_voting_machine;
         .admin_password(admin_password),
         .enable_admin(enable_admin),
         .result_mode(result_mode),
+        .voter_id(voter_id),
         .vote_a(vote_a),
         .vote_b(vote_b),
         .vote_c(vote_c),
@@ -43,6 +45,7 @@ module tb_secure_voting_machine;
         admin_password = 0;
         enable_admin = 0;
         result_mode = 0;
+        voter_id = 0;
         vote_a = 0;
         vote_b = 0;
         vote_c = 0;
@@ -54,16 +57,23 @@ module tb_secure_voting_machine;
         enable_admin = 1;
         #10 enable_admin = 0;
 
-        // Vote for candidate A
-        #20 vote_a = 1;
+        // Vote for candidate A (Voter 1)
+        #20 voter_id = 4'd1;
+        vote_a = 1;
         #10 vote_a = 0;
 
-        // Vote for candidate B
-        #30 vote_b = 1;
+        // Try to vote again with Voter 1 (Should be ignored)
+        #20 vote_b = 1; 
         #10 vote_b = 0;
 
-        // Vote for candidate C
-        #30 vote_c = 1;
+        // Vote for candidate B (Voter 2)
+        #20 voter_id = 4'd2;
+        vote_b = 1;
+        #10 vote_b = 0;
+
+        // Vote for candidate C (Voter 3)
+        #20 voter_id = 4'd3;
+        vote_c = 1;
         #10 vote_c = 0;
 
         // Enable result mode
