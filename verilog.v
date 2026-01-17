@@ -37,6 +37,7 @@ module secure_voting_machine (
     reg [2:0] state, next_state;
     reg auth_ok;
     reg [15:0] voter_status; // Track who has voted (Bit 0 for ID 0, Bit 1 -> ID 1, etc.)
+    reg [1:0] vote_choice; // Latch which candidate was chosen (0=A, 1=B, 2=C)
 
     // FSM state register
     always @(posedge clk or posedge reset) begin
@@ -102,17 +103,27 @@ module secure_voting_machine (
 
                 IDLE: begin
                     busy <= 0;
+                    // Latch the vote choice when transitioning to VOTE
+                    if (next_state == VOTE) begin
+                        if (vote_a)
+                            vote_choice <= 2'b00;
+                        else if (vote_b)
+                            vote_choice <= 2'b01;
+                        else if (vote_c)
+                            vote_choice <= 2'b10;
+                    end
                 end
 
                 VOTE: begin
                     busy <= 1;
                     voter_status[voter_id] <= 1; // Mark this ID as having voted
                     
-                    if (vote_a)
+                    // Use the latched vote choice
+                    if (vote_choice == 2'b00)
                         count_a <= count_a + 1;
-                    else if (vote_b)
+                    else if (vote_choice == 2'b01)
                         count_b <= count_b + 1;
-                    else if (vote_c)
+                    else if (vote_choice == 2'b10)
                         count_c <= count_c + 1;
                 end
 
@@ -135,7 +146,7 @@ module secure_voting_machine (
                 tie_flag = (count_a == count_b || count_a == count_c);
             end else if (count_b >= count_a && count_b >= count_c) begin
                 winner = 2'b01; // Candidate B
-                tie_flag = (count_b == count_c);
+                tie_flag = (count_b == count_a || count_b == count_c);
             end else begin
                 winner = 2'b10; // Candidate C
                 tie_flag = 0;
