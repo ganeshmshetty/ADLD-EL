@@ -19,7 +19,8 @@ module secure_voting_machine (
     output reg [7:0] count_c,
     output reg [1:0] winner,
     output reg voting_enabled,
-    output reg busy
+    output reg busy,
+    output reg tie_flag
 );
 
     // Password
@@ -126,19 +127,22 @@ module secure_voting_machine (
         end
     end
 
-    // Winner detection
+    // Winner detection with tie-breaker logic
     always @(*) begin
         if (state == RESULT) begin
-            if (count_a > count_b && count_a > count_c)
-                winner = 2'b00;
-            else if (count_b > count_a && count_b > count_c)
-                winner = 2'b01;
-            else if (count_c > count_a && count_c > count_b)
-                winner = 2'b10;
-            else
-                winner = 2'b11; // Tie
+            if (count_a >= count_b && count_a >= count_c) begin
+                winner = 2'b00; // Candidate A
+                tie_flag = (count_a == count_b || count_a == count_c);
+            end else if (count_b >= count_a && count_b >= count_c) begin
+                winner = 2'b01; // Candidate B
+                tie_flag = (count_b == count_c);
+            end else begin
+                winner = 2'b10; // Candidate C
+                tie_flag = 0;
+            end
         end else begin
             winner = 2'b11;
+            tie_flag = 0;
         end
     end
 

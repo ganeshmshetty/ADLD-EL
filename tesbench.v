@@ -14,6 +14,7 @@ module tb_secure_voting_machine;
     wire [1:0] winner;
     wire voting_enabled;
     wire busy;
+    wire tie_flag;
 
     secure_voting_machine DUT (
         .clk(clk),
@@ -30,7 +31,8 @@ module tb_secure_voting_machine;
         .count_c(count_c),
         .winner(winner),
         .voting_enabled(voting_enabled),
-        .busy(busy)
+        .busy(busy),
+        .tie_flag(tie_flag)
     );
 
     // Clock generation
