@@ -1,6 +1,6 @@
 /**
- * Secure Voting Machine - JavaScript State Machine
- * Direct port of the Verilog FSM logic
+ * Secure Voting Machine with Blockchain Ledger
+ * JavaScript port that mirrors the Verilog FSM + hash chain logic exactly
  */
 
 const States = {
@@ -14,6 +14,29 @@ const States = {
 
 const PASSWORD = 0b1010; // Binary 1010
 
+// Constants matching the Verilog module
+const GENESIS_HASH = 0xDEADBEEF >>> 0;
+const MIX_CONSTANT = 0x9E3779B9 >>> 0;
+
+/**
+ * Compute hash chain step — mirrors the Verilog combinational logic:
+ *   block_data = {voter_id[3:0], vote_choice[1:0], block_count[7:0]}
+ *   step1 = prev_hash XOR (block_data << 7)
+ *   step2 = step1 XOR (step1 >>> 13)
+ *   step3 = step2 + MIX_CONSTANT
+ *   step4 = step3 XOR (step3 >>> 16)
+ */
+function computeNextHash(prevHash, voterId, voteChoice, blockCount) {
+    // Pack block data exactly as in Verilog: {voter_id, vote_choice, block_count}
+    const blockData = ((voterId & 0xF) << 10) | ((voteChoice & 0x3) << 8) | (blockCount & 0xFF);
+
+    let h = (prevHash ^ (blockData << 7)) >>> 0;
+    h = (h ^ (h >>> 13)) >>> 0;
+    h = (h + MIX_CONSTANT) >>> 0;
+    h = (h ^ (h >>> 16)) >>> 0;
+    return h;
+}
+
 class SecureVotingMachine {
     constructor() {
         this.reset();
@@ -24,13 +47,18 @@ class SecureVotingMachine {
         this.countA = 0;
         this.countB = 0;
         this.countC = 0;
-        this.voterStatus = new Set(); // Track which voter IDs have voted
+        this.voterStatus = new Set();
         this.votingEnabled = false;
         this.busy = false;
         this.tieFlag = false;
         this.winner = null;
         this.voteChoice = null;
         this.pendingVote = null;
+
+        // Blockchain ledger
+        this.ledgerHash = GENESIS_HASH;
+        this.blockCount = 0;
+        this.blocks = []; // Full block history for UI display
 
         // Transition to AUTH after reset
         this.state = States.AUTH;
@@ -61,6 +89,10 @@ class SecureVotingMachine {
             return { success: false, reason: this.getVoteBlockReason(voterId) };
         }
 
+        // Map candidate letter to 2-bit code matching Verilog
+        const candidateMap = { 'A': 0b00, 'B': 0b01, 'C': 0b10 };
+        const voteChoice = candidateMap[candidate];
+
         // Transition to VOTE state
         this.state = States.VOTE;
         this.busy = true;
@@ -71,25 +103,34 @@ class SecureVotingMachine {
 
         // Increment the appropriate counter
         switch (candidate) {
-            case 'A':
-                this.countA++;
-                break;
-            case 'B':
-                this.countB++;
-                break;
-            case 'C':
-                this.countC++;
-                break;
+            case 'A': this.countA++; break;
+            case 'B': this.countB++; break;
+            case 'C': this.countC++; break;
         }
+
+        // Blockchain: compute next hash (mirrors Verilog's VOTE state block)
+        const prevHash = this.ledgerHash;
+        const newHash = computeNextHash(prevHash, voterId, voteChoice, this.blockCount);
+
+        // Record the block
+        this.blocks.push({
+            index: this.blockCount,
+            voterId: voterId,
+            candidate: candidate,
+            prevHash: prevHash,
+            hash: newHash,
+            timestamp: Date.now()
+        });
+
+        this.ledgerHash = newHash;
+        this.blockCount++;
 
         // Transition through LOCK and back to IDLE
         this.state = States.LOCK;
         this.busy = false;
-
-        // Auto-transition back to IDLE (simulating vote button release)
         this.state = States.IDLE;
 
-        return { success: true };
+        return { success: true, block: this.blocks[this.blocks.length - 1] };
     }
 
     getVoteBlockReason(voterId) {
@@ -131,6 +172,31 @@ class SecureVotingMachine {
         }
     }
 
+    /**
+     * Verify the entire chain from genesis.
+     * Re-computes every hash from scratch and checks if the final hash matches.
+     * Returns { valid: boolean, mismatchAtBlock: number|null }
+     */
+    verifyChain() {
+        let currentHash = GENESIS_HASH;
+        const candidateMap = { 'A': 0b00, 'B': 0b01, 'C': 0b10 };
+
+        for (let i = 0; i < this.blocks.length; i++) {
+            const block = this.blocks[i];
+            const expected = computeNextHash(currentHash, block.voterId, candidateMap[block.candidate], i);
+            if (expected !== block.hash) {
+                return { valid: false, mismatchAtBlock: i };
+            }
+            currentHash = expected;
+        }
+
+        if (this.blocks.length > 0 && currentHash !== this.ledgerHash) {
+            return { valid: false, mismatchAtBlock: this.blocks.length - 1 };
+        }
+
+        return { valid: true, mismatchAtBlock: null };
+    }
+
     // Get current state for UI
     getState() {
         return {
@@ -143,7 +209,10 @@ class SecureVotingMachine {
             winner: this.winner,
             tieFlag: this.tieFlag,
             totalVotes: this.voterStatus.size,
-            votedIds: Array.from(this.voterStatus)
+            votedIds: Array.from(this.voterStatus),
+            ledgerHash: this.ledgerHash,
+            blockCount: this.blockCount,
+            blocks: this.blocks
         };
     }
 }
@@ -151,3 +220,5 @@ class SecureVotingMachine {
 // Export for use in HTML
 window.SecureVotingMachine = SecureVotingMachine;
 window.States = States;
+window.GENESIS_HASH = GENESIS_HASH;
+window.computeNextHash = computeNextHash;

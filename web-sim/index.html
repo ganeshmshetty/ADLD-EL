@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Voting Machine Simulator</title>
-    <meta name="description" content="Web-based simulation of a secure voting machine with FSM-based logic">
+    <meta name="description"
+        content="Web-based simulation of a secure voting machine with FSM-based logic and blockchain ledger">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,18 +30,12 @@
     </script>
     <style>
         :root {
-            /* CHANGE THESE 4 COLORS TO THEME YOUR APP */
             --color-primary: #EDEDCE;
-            /* Main Background */
             --color-secondary: #629FAD;
-            /* Cards / Sections */
             --color-accent: #296374;
-            /* Highlights / Buttons */
             --color-text: #0C2C55;
-            /* Text */
         }
 
-        /* Custom styles for number inputs */
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -50,7 +45,86 @@
         input[type="number"] {
             -moz-appearance: textfield;
             appearance: textfield;
-            /* Standard property for compatibility */
+        }
+
+        /* Blockchain block animation */
+        @keyframes blockAppear {
+            0% {
+                opacity: 0;
+                transform: translateY(12px) scale(0.95);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .block-enter {
+            animation: blockAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes hashPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .hash-pulse {
+            animation: hashPulse 0.6s ease-in-out;
+        }
+
+        /* Chain connector line */
+        .chain-arrow {
+            position: relative;
+        }
+
+        .chain-arrow::after {
+            content: '→';
+            font-size: 1.25rem;
+            color: var(--color-accent);
+            opacity: 0.5;
+        }
+
+        /* Scrollbar styling for the ledger */
+        #blockchain-ledger::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        #blockchain-ledger::-webkit-scrollbar-track {
+            background: var(--color-primary);
+            border-radius: 3px;
+        }
+
+        #blockchain-ledger::-webkit-scrollbar-thumb {
+            background: var(--color-accent);
+            border-radius: 3px;
+            opacity: 0.5;
+        }
+
+        /* Verification flash */
+        @keyframes verifyFlash {
+            0% {
+                box-shadow: 0 0 0 0 rgba(41, 99, 116, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 8px rgba(41, 99, 116, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(41, 99, 116, 0);
+            }
+        }
+
+        .verify-pulse {
+            animation: verifyFlash 0.8s ease-out;
         }
     </style>
 </head>
@@ -63,11 +137,18 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-xl font-semibold text-accent">Secure Voting Machine</h1>
-                    <p class="text-sm text-text-main/60">FSM-Based Hardware Simulation</p>
+                    <p class="text-sm text-text-main/60">FSM-Based Hardware Simulation with Blockchain Ledger</p>
                 </div>
-                <div id="state-badge"
-                    class="px-3 py-1.5 rounded-full text-xs font-medium bg-secondary text-accent border border-secondary">
-                    State: AUTH
+                <div class="flex items-center gap-3">
+                    <div id="hash-badge"
+                        class="hidden lg:block px-3 py-1.5 rounded-full text-xs font-mono bg-primary text-accent border border-secondary truncate max-w-[200px]"
+                        title="Current Ledger Hash">
+                        0xDEADBEEF
+                    </div>
+                    <div id="state-badge"
+                        class="px-3 py-1.5 rounded-full text-xs font-medium bg-secondary text-accent border border-secondary">
+                        State: AUTH
+                    </div>
                 </div>
             </div>
         </div>
@@ -99,7 +180,7 @@
                             placeholder="0">
                     </div>
                     <button id="auth-btn"
-                        class="w-full py-2.5 px-4 bg-accent hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-primary font-bold rounded-lg transition-colors">
+                        class="w-full py-2.5 px-4 bg-accent hover:opacity-90 disabled:bg-secondary disabled:text-text-main/40 disabled:cursor-not-allowed text-primary font-bold rounded-lg transition-colors">
                         Authenticate
                     </button>
                 </div>
@@ -111,7 +192,7 @@
                         Reset System
                     </button>
                     <button id="result-btn"
-                        class="w-full py-2.5 px-4 bg-secondary hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed text-text-main border border-accent/20 font-medium rounded-lg transition-colors">
+                        class="w-full py-2.5 px-4 bg-accent/30 hover:bg-accent/40 disabled:opacity-50 disabled:cursor-not-allowed text-text-main border-2 border-accent font-medium rounded-lg transition-colors">
                         Show Results
                     </button>
                 </div>
@@ -132,6 +213,10 @@
                             <span class="text-sm text-text-main/70">Total Votes</span>
                             <span id="total-votes" class="text-sm font-medium text-text-main">0</span>
                         </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-text-main/70">Blocks</span>
+                            <span id="block-count" class="text-sm font-medium font-mono text-accent">0</span>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -145,7 +230,6 @@
                     <label class="block text-sm font-medium text-text-main mb-3">Voter ID</label>
                     <select id="voter-id"
                         class="w-full py-2.5 px-4 bg-primary border border-secondary rounded-lg text-text-main focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all">
-                        <!-- Options will be populated by JS -->
                     </select>
                     <p id="voter-status-msg" class="mt-2 text-xs text-text-main/50">Select a voter ID to cast a vote
                     </p>
@@ -197,7 +281,7 @@
                             <span class="text-sm font-medium text-text-main">Candidate A</span>
                             <span id="count-a" class="text-2xl font-semibold text-accent tabular-nums">0</span>
                         </div>
-                        <div class="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                        <div class="w-full h-3 bg-secondary rounded-full overflow-hidden">
                             <div id="bar-a" class="h-full bg-accent transition-all duration-300" style="width: 0%">
                             </div>
                         </div>
@@ -208,7 +292,7 @@
                             <span class="text-sm font-medium text-text-main">Candidate B</span>
                             <span id="count-b" class="text-2xl font-semibold text-accent tabular-nums">0</span>
                         </div>
-                        <div class="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                        <div class="w-full h-3 bg-secondary rounded-full overflow-hidden">
                             <div id="bar-b" class="h-full bg-accent transition-all duration-300" style="width: 0%">
                             </div>
                         </div>
@@ -219,7 +303,7 @@
                             <span class="text-sm font-medium text-text-main">Candidate C</span>
                             <span id="count-c" class="text-2xl font-semibold text-accent tabular-nums">0</span>
                         </div>
-                        <div class="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                        <div class="w-full h-3 bg-secondary rounded-full overflow-hidden">
                             <div id="bar-c" class="h-full bg-accent transition-all duration-300" style="width: 0%">
                             </div>
                         </div>
@@ -245,11 +329,61 @@
 
         </div>
 
+        <!-- Blockchain Ledger -->
+        <section class="mt-6 bg-secondary rounded-xl border border-secondary p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-sm font-medium text-text-main/50 uppercase tracking-wide">Blockchain Ledger</h2>
+                    <p class="text-xs text-text-main/40 mt-1">Each vote creates an immutable block linked by
+                        cryptographic hashes</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div id="chain-status" class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-green-600"></div>
+                        <span class="text-xs text-text-main/60">Chain intact</span>
+                    </div>
+                    <button id="verify-btn"
+                        class="px-3 py-1.5 bg-accent hover:opacity-90 text-primary text-xs font-medium rounded-lg transition-colors">
+                        Verify Chain
+                    </button>
+                </div>
+            </div>
+
+            <!-- Current Hash Display -->
+            <div class="mb-4 p-3 bg-primary rounded-lg border border-secondary/50 flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-text-main/50 uppercase tracking-wide">Current Ledger Hash</span>
+                    <p id="current-hash" class="font-mono text-sm text-accent font-semibold mt-1">0xDEADBEEF</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-text-main/50 uppercase tracking-wide">Genesis</span>
+                    <p class="font-mono text-xs text-text-main/40 mt-1">0xDEADBEEF</p>
+                </div>
+            </div>
+
+            <!-- Block Chain Visual -->
+            <div id="blockchain-ledger" class="flex gap-3 overflow-x-auto pb-3 min-h-[120px] items-start">
+                <!-- Genesis Block -->
+                <div class="flex-shrink-0 w-48 p-3 bg-primary rounded-lg border-2 border-accent/30">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-accent">GENESIS</span>
+                        <span class="text-xs text-text-main/40">#0</span>
+                    </div>
+                    <div class="font-mono text-xs text-text-main/60 break-all">
+                        0xDEADBEEF
+                    </div>
+                    <div class="mt-2 text-xs text-text-main/30">
+                        Initial seed block
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Activity Log -->
         <section class="mt-6 bg-secondary rounded-xl border border-secondary p-6">
             <h2 class="text-sm font-medium text-text-main/50 uppercase tracking-wide mb-4">Activity Log</h2>
             <div id="activity-log" class="font-mono text-sm space-y-1 max-h-40 overflow-y-auto">
-                <p class="text-text-main/60">System initialized. Waiting for admin authentication...</p>
+                <p class="text-text-main/60">System initialized. Blockchain genesis hash: 0xDEADBEEF</p>
             </div>
         </section>
     </main>
@@ -262,9 +396,11 @@
         // DOM Elements
         const elements = {
             stateBadge: document.getElementById('state-badge'),
+            hashBadge: document.getElementById('hash-badge'),
             authBtn: document.getElementById('auth-btn'),
             resetBtn: document.getElementById('reset-btn'),
             resultBtn: document.getElementById('result-btn'),
+            verifyBtn: document.getElementById('verify-btn'),
             voterId: document.getElementById('voter-id'),
             voterStatusMsg: document.getElementById('voter-status-msg'),
             voteA: document.getElementById('vote-a'),
@@ -274,6 +410,7 @@
             votingStatus: document.getElementById('voting-status'),
             busyStatus: document.getElementById('busy-status'),
             totalVotes: document.getElementById('total-votes'),
+            blockCount: document.getElementById('block-count'),
             countA: document.getElementById('count-a'),
             countB: document.getElementById('count-b'),
             countC: document.getElementById('count-c'),
@@ -284,6 +421,9 @@
             tieIndicator: document.getElementById('tie-indicator'),
             votedList: document.getElementById('voted-list'),
             activityLog: document.getElementById('activity-log'),
+            blockchainLedger: document.getElementById('blockchain-ledger'),
+            currentHash: document.getElementById('current-hash'),
+            chainStatus: document.getElementById('chain-status'),
             bits: [
                 document.getElementById('bit-0'),
                 document.getElementById('bit-1'),
@@ -300,16 +440,22 @@
             elements.voterId.appendChild(option);
         }
 
+        // Utility: Format hash as hex
+        function formatHash(hash) {
+            return '0x' + (hash >>> 0).toString(16).toUpperCase().padStart(8, '0');
+        }
+
         // Utility: Add log entry
         function log(message, type = 'info') {
             const entry = document.createElement('p');
             const timestamp = new Date().toLocaleTimeString();
 
-            // Use opacity and accent color instead of hardcoded red/green
             if (type === 'error') {
-                entry.className = 'text-text-main font-bold border-l-2 border-red-500 pl-2'; // Keep red for error semantics
+                entry.className = 'text-text-main font-bold border-l-2 border-red-500 pl-2';
             } else if (type === 'success') {
                 entry.className = 'text-accent font-medium border-l-2 border-accent pl-2';
+            } else if (type === 'chain') {
+                entry.className = 'text-text-main/70 font-mono text-xs border-l-2 border-accent/30 pl-2';
             } else {
                 entry.className = 'text-text-main/60';
             }
@@ -319,22 +465,72 @@
             elements.activityLog.scrollTop = elements.activityLog.scrollHeight;
         }
 
+        // Render a new block in the ledger
+        function renderBlock(block) {
+            // Add chain connector arrow
+            const arrow = document.createElement('div');
+            arrow.className = 'chain-arrow flex-shrink-0 flex items-center';
+            elements.blockchainLedger.appendChild(arrow);
+
+            // Create block element
+            const blockEl = document.createElement('div');
+            blockEl.className = 'flex-shrink-0 w-56 p-3 bg-primary rounded-lg border border-secondary/50 block-enter';
+
+            const candidateColors = { 'A': 'text-blue-700', 'B': 'text-emerald-700', 'C': 'text-amber-700' };
+
+            blockEl.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold ${candidateColors[block.candidate] || 'text-accent'}">
+                        BLOCK #${block.index + 1}
+                    </span>
+                    <span class="text-xs text-text-main/40">Voter ${block.voterId}</span>
+                </div>
+                <div class="mb-2">
+                    <span class="text-xs text-text-main/50">Candidate</span>
+                    <span class="text-sm font-semibold text-text-main ml-1">${block.candidate}</span>
+                </div>
+                <div class="space-y-1">
+                    <div>
+                        <span class="text-xs text-text-main/40">prev:</span>
+                        <span class="font-mono text-xs text-text-main/50">${formatHash(block.prevHash)}</span>
+                    </div>
+                    <div>
+                        <span class="text-xs text-text-main/40">hash:</span>
+                        <span class="font-mono text-xs text-accent font-semibold">${formatHash(block.hash)}</span>
+                    </div>
+                </div>
+            `;
+
+            elements.blockchainLedger.appendChild(blockEl);
+
+            // Scroll the ledger to the newest block
+            elements.blockchainLedger.scrollLeft = elements.blockchainLedger.scrollWidth;
+        }
+
         // Update UI based on machine state
         function updateUI() {
             const state = vm.getState();
 
             // State badge
-            // Simplifying to use standard theme colors with opacity
             const stateColors = {
                 RESET: 'bg-primary text-text-main/50',
                 AUTH: 'bg-accent/20 text-accent border-accent/20',
                 IDLE: 'bg-primary border-accent/50 text-text-main',
                 VOTE: 'bg-accent text-primary font-bold',
                 LOCK: 'bg-primary text-text-main/50',
-                RESULT: 'bg-secondary border-accent text-accent'
+                RESULT: 'bg-accent text-primary border-accent font-bold'
             };
             elements.stateBadge.className = `px-3 py-1.5 rounded-full text-xs font-medium border border-secondary ${stateColors[state.state]}`;
             elements.stateBadge.textContent = `State: ${state.state}`;
+
+            // Hash badge in header
+            elements.hashBadge.textContent = formatHash(state.ledgerHash);
+            elements.hashBadge.title = `Ledger Hash: ${formatHash(state.ledgerHash)}`;
+
+            // Current hash display
+            elements.currentHash.textContent = formatHash(state.ledgerHash);
+            elements.currentHash.classList.add('hash-pulse');
+            setTimeout(() => elements.currentHash.classList.remove('hash-pulse'), 600);
 
             // Voting status
             elements.votingStatus.textContent = state.votingEnabled ? 'Enabled' : 'Disabled';
@@ -345,6 +541,9 @@
 
             // Total votes
             elements.totalVotes.textContent = state.totalVotes;
+
+            // Block count
+            elements.blockCount.textContent = state.blockCount;
 
             // Vote counts
             elements.countA.textContent = state.countA;
@@ -423,9 +622,21 @@
         // Event: Reset
         elements.resetBtn.addEventListener('click', () => {
             vm.reset();
-            log('System reset. All votes cleared.', 'info');
+            log('System reset. All votes cleared. Chain reset to genesis.', 'info');
             // Clear password inputs
             elements.bits.forEach(bit => bit.value = '');
+            // Reset blockchain ledger visual
+            elements.blockchainLedger.innerHTML = `
+                <div class="flex-shrink-0 w-48 p-3 bg-primary rounded-lg border-2 border-accent/30">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-accent">GENESIS</span>
+                        <span class="text-xs text-text-main/40">#0</span>
+                    </div>
+                    <div class="font-mono text-xs text-text-main/60 break-all">0xDEADBEEF</div>
+                    <div class="mt-2 text-xs text-text-main/30">Initial seed block</div>
+                </div>
+            `;
+            elements.chainStatus.innerHTML = '<div class="w-2 h-2 rounded-full bg-green-600"></div><span class="text-xs text-text-main/60">Chain intact</span>';
             updateUI();
         });
 
@@ -434,6 +645,7 @@
             vm.enableResultMode();
             const state = vm.getState();
             log(`Results mode enabled. Winner: Candidate ${state.winner}${state.tieFlag ? ' (TIE)' : ''}`, 'success');
+            log(`Final ledger hash: ${formatHash(state.ledgerHash)} | Total blocks: ${state.blockCount}`, 'chain');
             updateUI();
         });
 
@@ -444,7 +656,9 @@
 
             if (result.success) {
                 log(`Voter ${voterId} cast vote for Candidate ${candidate}`, 'success');
+                log(`Block #${result.block.index + 1} mined: ${formatHash(result.block.prevHash)} → ${formatHash(result.block.hash)}`, 'chain');
                 showFeedback(`Vote recorded for Candidate ${candidate}`, 'success');
+                renderBlock(result.block);
             } else {
                 log(`Vote rejected: ${result.reason}`, 'error');
                 showFeedback(result.reason, 'error');
@@ -458,6 +672,26 @@
 
         // Event: Voter ID change
         elements.voterId.addEventListener('change', updateUI);
+
+        // Event: Verify Chain
+        elements.verifyBtn.addEventListener('click', () => {
+            const result = vm.verifyChain();
+            const state = vm.getState();
+
+            if (result.valid) {
+                log(`Chain verification PASSED ✓ | ${state.blockCount} blocks verified | Hash: ${formatHash(state.ledgerHash)}`, 'success');
+                elements.chainStatus.innerHTML = '<div class="w-2 h-2 rounded-full bg-green-600"></div><span class="text-xs text-green-700 font-medium">Verified ✓</span>';
+
+                // Flash all blocks
+                elements.blockchainLedger.querySelectorAll('.bg-primary').forEach(el => {
+                    el.classList.add('verify-pulse');
+                    setTimeout(() => el.classList.remove('verify-pulse'), 800);
+                });
+            } else {
+                log(`Chain verification FAILED ✗ | Mismatch at block #${result.mismatchAtBlock}`, 'error');
+                elements.chainStatus.innerHTML = '<div class="w-2 h-2 rounded-full bg-red-500"></div><span class="text-xs text-red-600 font-medium">TAMPERED ✗</span>';
+            }
+        });
 
         // Feedback display
         function showFeedback(message, type) {
@@ -476,10 +710,7 @@
         // Auto-advance on bit inputs
         elements.bits.forEach((input, index) => {
             input.addEventListener('input', (e) => {
-                // Only allow 0 or 1
                 e.target.value = e.target.value.replace(/[^01]/g, '');
-
-                // Auto-advance to next input
                 if (e.target.value && index < 3) {
                     elements.bits[index + 1].focus();
                 }
