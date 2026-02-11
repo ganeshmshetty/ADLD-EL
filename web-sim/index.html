@@ -32,7 +32,7 @@
             /* CHANGE THESE 4 COLORS TO THEME YOUR APP */
             --color-primary: #d5d5b8;
             /* Main Background */
-            --color-secondary: #629FAD;
+            --color-secondary: #397e8d;
             /* Cards / Sections */
             --color-accent: #296374;
             /* Highlights / Buttons */
@@ -136,11 +136,11 @@
 
             <!-- Admin Panel -->
             <section class="bg-secondary rounded-xl border border-secondary p-6">
-                <h2 class="text-sm font-medium text-text-main/50 uppercase tracking-wide mb-6">Admin Panel</h2>
+                <h2 class="text-sm font-medium text-primary/70 uppercase tracking-wide mb-6">Admin Panel</h2>
 
                 <!-- Password Input -->
                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-text-main mb-3">Password (4-bit binary)</label>
+                    <label class="block text-sm font-medium text-primary mb-3">Password (4-bit binary)</label>
                     <div class="flex gap-2 mb-3">
                         <input type="text" id="bit-3" maxlength="1" pattern="[01]"
                             class="w-12 h-12 text-center text-lg font-mono bg-primary border border-secondary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all text-text-main"
@@ -168,26 +168,26 @@
                         Reset System
                     </button>
                     <button id="result-btn"
-                        class="w-full py-2.5 px-4 bg-secondary hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed text-text-main border border-accent/20 font-medium rounded-lg transition-colors">
+                        class="w-full py-2.5 px-4 bg-accent hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-primary font-medium rounded-lg transition-colors">
                         Show Results
                     </button>
                 </div>
 
                 <!-- Status Indicators -->
                 <div class="mt-6 pt-6 border-t border-secondary/50">
-                    <h3 class="text-xs font-medium text-text-main/50 uppercase tracking-wide mb-4">Status</h3>
+                    <h3 class="text-xs font-medium text-primary/60 uppercase tracking-wide mb-4">Status</h3>
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
-                            <span class="text-sm text-text-main/70">Voting</span>
-                            <span id="voting-status" class="text-sm font-medium text-text-main/50">Disabled</span>
+                            <span class="text-sm text-primary/80">Voting</span>
+                            <span id="voting-status" class="text-sm font-medium text-primary/60">Disabled</span>
                         </div>
                         <div class="flex items-center justify-between">
-                            <span class="text-sm text-text-main/70">System</span>
-                            <span id="busy-status" class="text-sm font-medium text-text-main">Ready</span>
+                            <span class="text-sm text-primary/80">System</span>
+                            <span id="busy-status" class="text-sm font-medium text-primary">Ready</span>
                         </div>
                         <div class="flex items-center justify-between">
-                            <span class="text-sm text-text-main/70">Total Votes</span>
-                            <span id="total-votes" class="text-sm font-medium text-text-main">0</span>
+                            <span class="text-sm text-primary/80">Total Votes</span>
+                            <span id="total-votes" class="text-sm font-medium text-primary">0</span>
                         </div>
                     </div>
                 </div>
@@ -195,22 +195,22 @@
 
             <!-- Voting Booth -->
             <section class="bg-secondary rounded-xl border border-secondary p-6">
-                <h2 class="text-sm font-medium text-text-main/50 uppercase tracking-wide mb-6">Voting Booth</h2>
+                <h2 class="text-sm font-medium text-primary/70 uppercase tracking-wide mb-6">Voting Booth</h2>
 
                 <!-- Voter ID -->
                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-text-main mb-3">Voter ID</label>
+                    <label class="block text-sm font-medium text-primary mb-3">Voter ID</label>
                     <select id="voter-id"
                         class="w-full py-2.5 px-4 bg-primary border border-secondary rounded-lg text-text-main focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all">
                         <!-- Options will be populated by JS -->
                     </select>
-                    <p id="voter-status-msg" class="mt-2 text-xs text-text-main/50">Select a voter ID to cast a vote
+                    <p id="voter-status-msg" class="mt-2 text-xs text-primary/60">Select a voter ID to cast a vote
                     </p>
                 </div>
 
                 <!-- Candidate Buttons -->
                 <div class="space-y-3">
-                    <h3 class="text-xs font-medium text-text-main/50 uppercase tracking-wide mb-3">Cast Your Vote</h3>
+                    <h3 class="text-xs font-medium text-primary/60 uppercase tracking-wide mb-3">Cast Your Vote</h3>
 
                     <button id="vote-a"
                         class="vote-btn w-full py-4 px-4 bg-primary disabled:opacity-50 disabled:cursor-not-allowed text-text-main font-medium rounded-lg border-2 border-secondary transition-all group"
@@ -248,7 +248,7 @@
 
             <!-- Results Panel -->
             <section class="bg-secondary rounded-xl border border-secondary p-6">
-                <h2 class="text-sm font-medium text-text-main/50 uppercase tracking-wide mb-6">Results</h2>
+                <h2 class="text-sm font-medium text-primary/70 uppercase tracking-wide mb-6">Results</h2>
 
                 <!-- Vote Counts -->
                 <div class="space-y-4 mb-6">
@@ -301,10 +301,10 @@
 
                 <!-- Voted IDs List -->
                 <div class="mt-6 pt-6 border-t border-secondary">
-                    <h3 class="text-xs font-medium text-text-main/50 uppercase tracking-wide mb-3">Voters Registered
+                    <h3 class="text-xs font-medium text-primary/60 uppercase tracking-wide mb-3">Voters Registered
                     </h3>
                     <div id="voted-list" class="flex flex-wrap gap-2">
-                        <span class="text-sm text-text-main">None yet</span>
+                        <span class="text-sm text-primary/60">None yet</span>
                     </div>
                 </div>
             </section>
@@ -313,7 +313,7 @@
 
         <!-- Activity Log -->
         <section class="mt-6 bg-secondary rounded-xl border border-secondary p-6">
-            <h2 class="text-sm font-medium text-text-main/50 uppercase tracking-wide mb-4">Activity Log</h2>
+            <h2 class="text-sm font-medium text-primary/70 uppercase tracking-wide mb-4">Activity Log</h2>
             <div id="activity-log" class="text-sm space-y-1 max-h-40 overflow-y-auto">
                 <p>> System initialized. Waiting for admin authentication...</p>
             </div>
@@ -322,8 +322,8 @@
         <!-- Waveform Viewer -->
         <section class="mt-8 bg-secondary rounded-xl border border-secondary p-6">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-sm font-medium text-text-main/50 uppercase tracking-wide">EPWave Simulation Viewer</h2>
-                <div class="text-xs text-text-main/40 font-mono">Time Scale: 10ns/step</div>
+                <h2 class="text-sm font-medium text-primary/70 uppercase tracking-wide">EPWave Simulation Viewer</h2>
+                <div class="text-xs text-primary/50 font-mono">Time Scale: 10ns/step</div>
             </div>
             <div id="waveform-container"
                 class="w-full overflow-hidden bg-[#121212] rounded-lg border border-secondary relative h-[400px]">
@@ -485,7 +485,7 @@
 
             // Voting status
             elements.votingStatus.textContent = state.votingEnabled ? 'Enabled' : 'Disabled';
-            elements.votingStatus.className = `text-sm font-medium ${state.votingEnabled ? 'text-accent' : 'text-text-main/40'}`;
+            elements.votingStatus.className = `text-sm font-medium ${state.votingEnabled ? 'text-accent' : 'text-primary/40'}`;
 
             // Busy status
             elements.busyStatus.textContent = state.busy ? 'Busy' : 'Ready';
@@ -521,7 +521,7 @@
                     `<span class="px-2 py-1 bg-primary rounded text-xs text-text-main/70 border border-secondary">ID ${id}</span>`
                 ).join('');
             } else {
-                elements.votedList.innerHTML = '<span class="text-sm text-text-main/30">None yet</span>';
+                elements.votedList.innerHTML = '<span class="text-sm text-primary/30">None yet</span>';
             }
 
             // Button states
@@ -541,10 +541,10 @@
                 elements.voterStatusMsg.className = 'mt-2 text-xs text-accent';
             } else if (!state.votingEnabled) {
                 elements.voterStatusMsg.textContent = 'Waiting for admin authentication';
-                elements.voterStatusMsg.className = 'mt-2 text-xs text-text-main/50';
+                elements.voterStatusMsg.className = 'mt-2 text-xs text-primary/50';
             } else if (state.votedIds.includes(currentVoterId)) {
                 elements.voterStatusMsg.textContent = 'This voter has already cast a vote';
-                elements.voterStatusMsg.className = 'mt-2 text-xs text-text-main/50';
+                elements.voterStatusMsg.className = 'mt-2 text-xs text-primary/50';
             } else {
                 elements.voterStatusMsg.textContent = 'Ready to vote';
                 elements.voterStatusMsg.className = 'mt-2 text-xs text-accent';
