@@ -30,7 +30,7 @@
     <style>
         :root {
             /* CHANGE THESE 4 COLORS TO THEME YOUR APP */
-            --color-primary: #EDEDCE;
+            --color-primary: #d5d5b8;
             /* Main Background */
             --color-secondary: #629FAD;
             /* Cards / Sections */
@@ -38,6 +38,14 @@
             /* Highlights / Buttons */
             --color-text: #0C2C55;
             /* Text */
+
+            /* Candidate Colors */
+            --color-candidate-a: #00e676;
+            /* Green */
+            --color-candidate-b: #2196f3;
+            /* Blue */
+            --color-candidate-c: #ff9800;
+            /* Orange */
         }
 
         /* Custom styles for number inputs */
@@ -51,6 +59,55 @@
             -moz-appearance: textfield;
             appearance: textfield;
             /* Standard property for compatibility */
+        }
+
+        /* Terminal-style activity log */
+        #activity-log {
+            background: #0a0a0a;
+            color: #00e676;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #1a1a1a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #activity-log::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(0deg,
+                    rgba(0, 230, 118, 0.03) 0px,
+                    rgba(0, 230, 118, 0.03) 1px,
+                    transparent 1px,
+                    transparent 2px);
+            pointer-events: none;
+        }
+
+        #activity-log p {
+            text-shadow: 0 0 5px rgba(0, 230, 118, 0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Candidate-specific button colors */
+        #vote-a:hover:not(:disabled) {
+            background-color: var(--color-candidate-a) !important;
+            color: #000 !important;
+        }
+
+        #vote-b:hover:not(:disabled) {
+            background-color: var(--color-candidate-b) !important;
+            color: #fff !important;
+        }
+
+        #vote-c:hover:not(:disabled) {
+            background-color: var(--color-candidate-c) !important;
+            color: #000 !important;
         }
     </style>
 </head>
@@ -156,7 +213,8 @@
                     <h3 class="text-xs font-medium text-text-main/50 uppercase tracking-wide mb-3">Cast Your Vote</h3>
 
                     <button id="vote-a"
-                        class="vote-btn w-full py-4 px-4 bg-primary hover:bg-accent hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed text-text-main font-medium rounded-lg border border-secondary transition-all group">
+                        class="vote-btn w-full py-4 px-4 bg-primary disabled:opacity-50 disabled:cursor-not-allowed text-text-main font-medium rounded-lg border-2 border-secondary transition-all group"
+                        style="border-color: var(--color-candidate-a);">
                         <div class="flex items-center justify-between">
                             <span>Candidate A</span>
                             <span class="text-xs text-text-main/50 group-hover:text-primary">Press to vote</span>
@@ -164,7 +222,8 @@
                     </button>
 
                     <button id="vote-b"
-                        class="vote-btn w-full py-4 px-4 bg-primary hover:bg-accent hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed text-text-main font-medium rounded-lg border border-secondary transition-all group">
+                        class="vote-btn w-full py-4 px-4 bg-primary disabled:opacity-50 disabled:cursor-not-allowed text-text-main font-medium rounded-lg border-2 border-secondary transition-all group"
+                        style="border-color: var(--color-candidate-b);">
                         <div class="flex items-center justify-between">
                             <span>Candidate B</span>
                             <span class="text-xs text-text-main/50 group-hover:text-primary">Press to vote</span>
@@ -172,7 +231,8 @@
                     </button>
 
                     <button id="vote-c"
-                        class="vote-btn w-full py-4 px-4 bg-primary hover:bg-accent hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed text-text-main font-medium rounded-lg border border-secondary transition-all group">
+                        class="vote-btn w-full py-4 px-4 bg-primary disabled:opacity-50 disabled:cursor-not-allowed text-text-main font-medium rounded-lg border-2 border-secondary transition-all group"
+                        style="border-color: var(--color-candidate-c);">
                         <div class="flex items-center justify-between">
                             <span>Candidate C</span>
                             <span class="text-xs text-text-main/50 group-hover:text-primary">Press to vote</span>
@@ -195,10 +255,12 @@
                     <div class="p-4 bg-primary rounded-lg border border-secondary/50">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-text-main">Candidate A</span>
-                            <span id="count-a" class="text-2xl font-semibold text-accent tabular-nums">0</span>
+                            <span id="count-a" class="text-2xl font-semibold tabular-nums"
+                                style="color: var(--color-candidate-a);">0</span>
                         </div>
                         <div class="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                            <div id="bar-a" class="h-full bg-accent transition-all duration-300" style="width: 0%">
+                            <div id="bar-a" class="h-full transition-all duration-300"
+                                style="width: 0%; background-color: var(--color-candidate-a);">
                             </div>
                         </div>
                     </div>
@@ -206,10 +268,12 @@
                     <div class="p-4 bg-primary rounded-lg border border-secondary/50">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-text-main">Candidate B</span>
-                            <span id="count-b" class="text-2xl font-semibold text-accent tabular-nums">0</span>
+                            <span id="count-b" class="text-2xl font-semibold tabular-nums"
+                                style="color: var(--color-candidate-b);">0</span>
                         </div>
                         <div class="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                            <div id="bar-b" class="h-full bg-accent transition-all duration-300" style="width: 0%">
+                            <div id="bar-b" class="h-full transition-all duration-300"
+                                style="width: 0%; background-color: var(--color-candidate-b);">
                             </div>
                         </div>
                     </div>
@@ -217,10 +281,12 @@
                     <div class="p-4 bg-primary rounded-lg border border-secondary/50">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-text-main">Candidate C</span>
-                            <span id="count-c" class="text-2xl font-semibold text-accent tabular-nums">0</span>
+                            <span id="count-c" class="text-2xl font-semibold tabular-nums"
+                                style="color: var(--color-candidate-c);">0</span>
                         </div>
                         <div class="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                            <div id="bar-c" class="h-full bg-accent transition-all duration-300" style="width: 0%">
+                            <div id="bar-c" class="h-full transition-all duration-300"
+                                style="width: 0%; background-color: var(--color-candidate-c);">
                             </div>
                         </div>
                     </div>
@@ -248,13 +314,26 @@
         <!-- Activity Log -->
         <section class="mt-6 bg-secondary rounded-xl border border-secondary p-6">
             <h2 class="text-sm font-medium text-text-main/50 uppercase tracking-wide mb-4">Activity Log</h2>
-            <div id="activity-log" class="font-mono text-sm space-y-1 max-h-40 overflow-y-auto">
-                <p class="text-text-main/60">System initialized. Waiting for admin authentication...</p>
+            <div id="activity-log" class="text-sm space-y-1 max-h-40 overflow-y-auto">
+                <p>> System initialized. Waiting for admin authentication...</p>
+            </div>
+        </section>
+
+        <!-- Waveform Viewer -->
+        <section class="mt-8 bg-secondary rounded-xl border border-secondary p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-medium text-text-main/50 uppercase tracking-wide">EPWave Simulation Viewer</h2>
+                <div class="text-xs text-text-main/40 font-mono">Time Scale: 10ns/step</div>
+            </div>
+            <div id="waveform-container"
+                class="w-full overflow-hidden bg-[#121212] rounded-lg border border-secondary relative h-[400px]">
+                <canvas id="waveform-canvas"></canvas>
             </div>
         </section>
     </main>
 
     <script src="voting-machine.js"></script>
+    <script src="waveform-viewer.js"></script>
     <script>
         // Initialize the voting machine
         const vm = new SecureVotingMachine();
@@ -300,21 +379,89 @@
             elements.voterId.appendChild(option);
         }
 
+        // --- Waveform Viewer Setup ---
+        const signalConfig = [
+            { name: 'clk', label: 'CLK', type: 'binary', color: '#ffeb3b' },
+            { name: 'reset', label: 'RESET', type: 'binary', color: '#ff5722' },
+            { name: 'auth_en', label: 'AUTH_EN', type: 'binary', color: '#00e676' },
+            { name: 'state', label: 'STATE', type: 'bus', color: '#00bcd4' },
+            { name: 'voter_id', label: 'VOTER_ID', type: 'bus', color: '#ffd740' },
+            { name: 'vote_a', label: 'VOTE_A', type: 'binary', color: '#ff4081' },
+            { name: 'vote_b', label: 'VOTE_B', type: 'binary', color: '#ff4081' },
+            { name: 'vote_c', label: 'VOTE_C', type: 'binary', color: '#ff4081' },
+            { name: 'count_a', label: 'COUNT_A', type: 'bus', color: '#4caf50' },
+            { name: 'count_b', label: 'COUNT_B', type: 'bus', color: '#2196f3' },
+            { name: 'count_c', label: 'COUNT_C', type: 'bus', color: '#ff9800' },
+            { name: 'win', label: 'WINNER', type: 'bus', color: '#f44336' }
+        ];
+
+        let waveViewer;
+        try {
+            waveViewer = new WaveformViewer('waveform-canvas', 'waveform-container', signalConfig);
+        } catch (e) {
+            console.error("Waveform viewer init failed", e);
+        }
+
+        let simTime = 0;
+        let lastClk = 0;
+
+        function updateWaveform(eventType, data = {}) {
+            if (!waveViewer) return;
+
+            simTime += 5;
+            lastClk = 1 - lastClk; // Toggle CLK
+
+            const state = vm.getState();
+
+            // Construct current signal state
+            const currentSignals = {
+                clk: lastClk,
+                reset: 0,
+                auth_en: 0,
+                state: state.state,
+                voter_id: parseInt(elements.voterId.value) || 0,
+                vote_a: 0,
+                vote_b: 0,
+                vote_c: 0,
+                count_a: state.countA,
+                count_b: state.countB,
+                count_c: state.countC,
+                win: state.winner ? (state.winner.charCodeAt(0) - 64) : 0 // 'A'->1, 'B'->2...
+            };
+
+            // Apply event specifics
+            if (eventType === 'RESET') currentSignals.reset = 1;
+            if (eventType === 'AUTH') currentSignals.auth_en = 1;
+            if (eventType === 'VOTE_A') currentSignals.vote_a = 1;
+            if (eventType === 'VOTE_B') currentSignals.vote_b = 1;
+            if (eventType === 'VOTE_C') currentSignals.vote_c = 1;
+
+            waveViewer.addDataPoint(simTime, currentSignals);
+
+            // Post-event (clock low, pulses off)
+            simTime += 5;
+            lastClk = 1 - lastClk;
+            const postSignals = { ...currentSignals, clk: lastClk, reset: 0, auth_en: 0, vote_a: 0, vote_b: 0, vote_c: 0 };
+            waveViewer.addDataPoint(simTime, postSignals);
+        }
+
+
         // Utility: Add log entry
         function log(message, type = 'info') {
             const entry = document.createElement('p');
             const timestamp = new Date().toLocaleTimeString();
 
-            // Use opacity and accent color instead of hardcoded red/green
+            // Terminal-style coloring
             if (type === 'error') {
-                entry.className = 'text-text-main font-bold border-l-2 border-red-500 pl-2'; // Keep red for error semantics
+                entry.style.color = '#ff5252'; // Red for errors
             } else if (type === 'success') {
-                entry.className = 'text-accent font-medium border-l-2 border-accent pl-2';
+                entry.style.color = '#00e676'; // Bright green for success
             } else {
-                entry.className = 'text-text-main/60';
+                entry.style.color = '#00e676'; // Default terminal green
+                entry.style.opacity = '0.7';
             }
 
-            entry.textContent = `[${timestamp}] ${message}`;
+            entry.textContent = `> [${timestamp}] ${message}`;
             elements.activityLog.appendChild(entry);
             elements.activityLog.scrollTop = elements.activityLog.scrollHeight;
         }
@@ -414,8 +561,10 @@
 
             if (vm.authenticate(password)) {
                 log('Admin authenticated successfully. Voting enabled.', 'success');
+                updateWaveform('AUTH', { password });
             } else {
                 log('Authentication failed. Invalid password.', 'error');
+                updateWaveform('AUTH_FAIL');
             }
             updateUI();
         });
@@ -423,6 +572,10 @@
         // Event: Reset
         elements.resetBtn.addEventListener('click', () => {
             vm.reset();
+            if (waveViewer) waveViewer.reset(); // Clear waveform on reset
+            simTime = 0;
+            updateWaveform('RESET');
+
             log('System reset. All votes cleared.', 'info');
             // Clear password inputs
             elements.bits.forEach(bit => bit.value = '');
@@ -434,6 +587,7 @@
             vm.enableResultMode();
             const state = vm.getState();
             log(`Results mode enabled. Winner: Candidate ${state.winner}${state.tieFlag ? ' (TIE)' : ''}`, 'success');
+            updateWaveform('RESULT');
             updateUI();
         });
 
@@ -445,9 +599,12 @@
             if (result.success) {
                 log(`Voter ${voterId} cast vote for Candidate ${candidate}`, 'success');
                 showFeedback(`Vote recorded for Candidate ${candidate}`, 'success');
+                updateWaveform(`VOTE_${candidate}`);
             } else {
                 log(`Vote rejected: ${result.reason}`, 'error');
                 showFeedback(result.reason, 'error');
+                // Still update waveform to show CLK/State
+                updateWaveform('VOTE_FAIL');
             }
             updateUI();
         }
