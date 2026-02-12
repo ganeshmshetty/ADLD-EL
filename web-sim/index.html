@@ -326,8 +326,12 @@
                 <div class="text-xs text-primary/50 font-mono">Time Scale: 10ns/step</div>
             </div>
             <div id="waveform-container"
-                class="w-full overflow-hidden bg-[#121212] rounded-lg border border-secondary relative h-[400px]">
+                class="w-full overflow-y-auto bg-[#121212] rounded-lg border border-secondary relative"
+                style="max-height: 600px;">
                 <canvas id="waveform-canvas"></canvas>
+            </div>
+            <div class="mt-2 text-xs text-primary/50 font-mono">
+                State Codes: 0=RESET, 1=AUTH, 2=IDLE, 3=VOTE, 4=LOCK, 5=RESULT
             </div>
         </section>
     </main>
@@ -405,44 +409,79 @@
         let simTime = 0;
         let lastClk = 0;
 
-        function updateWaveform(eventType, data = {}) {
-            if (!waveViewer) return;
+        // Map state names to numeric codes matching Verilog FSM encoding
+        const stateToCode = {
+            'RESET': 0,
+            'AUTH': 1,
+            'IDLE': 2,
+            'VOTE': 3,
+            'LOCK': 4,
+            'RESULT': 5
+        };
 
+        function emitWaveformPoint(stateCode, overrides = {}) {
             simTime += 5;
-            lastClk = 1 - lastClk; // Toggle CLK
+            lastClk = 1 - lastClk;
 
-            const state = vm.getState();
-
-            // Construct current signal state
-            const currentSignals = {
+            const machineState = vm.getState();
+            const signals = {
                 clk: lastClk,
                 reset: 0,
                 auth_en: 0,
-                state: state.state,
+                state: stateCode,
                 voter_id: parseInt(elements.voterId.value) || 0,
                 vote_a: 0,
                 vote_b: 0,
                 vote_c: 0,
-                count_a: state.countA,
-                count_b: state.countB,
-                count_c: state.countC,
-                win: state.winner ? (state.winner.charCodeAt(0) - 64) : 0 // 'A'->1, 'B'->2...
+                count_a: machineState.countA,
+                count_b: machineState.countB,
+                count_c: machineState.countC,
+                win: machineState.winner ? (machineState.winner.charCodeAt(0) - 64) : 0,
+                ...overrides
             };
 
-            // Apply event specifics
-            if (eventType === 'RESET') currentSignals.reset = 1;
-            if (eventType === 'AUTH') currentSignals.auth_en = 1;
-            if (eventType === 'VOTE_A') currentSignals.vote_a = 1;
-            if (eventType === 'VOTE_B') currentSignals.vote_b = 1;
-            if (eventType === 'VOTE_C') currentSignals.vote_c = 1;
+            waveViewer.addDataPoint(simTime, signals);
+            return signals;
+        }
 
-            waveViewer.addDataPoint(simTime, currentSignals);
+        function updateWaveform(eventType, data = {}) {
+            if (!waveViewer) return;
 
-            // Post-event (clock low, pulses off)
-            simTime += 5;
-            lastClk = 1 - lastClk;
-            const postSignals = { ...currentSignals, clk: lastClk, reset: 0, auth_en: 0, vote_a: 0, vote_b: 0, vote_c: 0 };
-            waveViewer.addDataPoint(simTime, postSignals);
+            const state = vm.getState();
+
+            if (eventType === 'RESET') {
+                // Show RESET pulse then AUTH
+                emitWaveformPoint(stateToCode['RESET'], { reset: 1 });
+                emitWaveformPoint(stateToCode['AUTH'], { reset: 0 });
+            } else if (eventType === 'AUTH') {
+                // Show AUTH state with enable pulse, then transition to IDLE
+                emitWaveformPoint(stateToCode['AUTH'], { auth_en: 1 });
+                emitWaveformPoint(stateToCode['IDLE'], { auth_en: 0 });
+            } else if (eventType === 'AUTH_FAIL') {
+                // Stay in AUTH
+                emitWaveformPoint(stateToCode['AUTH'], { auth_en: 1 });
+                emitWaveformPoint(stateToCode['AUTH'], { auth_en: 0 });
+            } else if (eventType === 'VOTE_A' || eventType === 'VOTE_B' || eventType === 'VOTE_C') {
+                const voteSignals = {
+                    vote_a: eventType === 'VOTE_A' ? 1 : 0,
+                    vote_b: eventType === 'VOTE_B' ? 1 : 0,
+                    vote_c: eventType === 'VOTE_C' ? 1 : 0
+                };
+                // Show VOTE state with vote pulse
+                emitWaveformPoint(stateToCode['VOTE'], voteSignals);
+                // Show LOCK state
+                emitWaveformPoint(stateToCode['LOCK'], {});
+                // Back to IDLE
+                emitWaveformPoint(stateToCode['IDLE'], {});
+            } else if (eventType === 'VOTE_FAIL') {
+                // Stay in current state
+                emitWaveformPoint(stateToCode[state.state] || 2, {});
+            } else if (eventType === 'RESULT') {
+                emitWaveformPoint(stateToCode['RESULT'], {});
+            } else {
+                // Generic: use current state
+                emitWaveformPoint(stateToCode[state.state] || 0, {});
+            }
         }
 
 
